@@ -6,13 +6,14 @@ using MsgPack;
 
 using Tarantool.Client.Models;
 using Tarantool.Client.Models.ClientMessages;
+using System;
 
 namespace Tarantool.Client
 {
     /// <summary>
     ///     The TarantoolClient interface.
     /// </summary>
-    public interface ITarantoolClient
+    public interface ITarantoolClient : IDisposable
     {
         /// <summary>Performs a CALL request.</summary>
         /// <param name="callRequest">The call request.</param>

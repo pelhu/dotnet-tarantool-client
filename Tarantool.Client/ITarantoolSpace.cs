@@ -12,6 +12,8 @@ namespace Tarantool.Client
     {
         /// <summary>Gets the space id. Returns 0 if id not have yet (see <see cref="EnsureHaveSpaceIdAsync" />).</summary>
         uint SpaceId { get; }
+        string SpaceName { get; }
+        string BoxPath { get; }
 
         /// <summary>Ensures have space id. If not then retrieves it by name. </summary>
         /// <param name="cancellationToken">The cancellation token.</param>

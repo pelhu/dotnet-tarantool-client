@@ -14,6 +14,8 @@ namespace Tarantool.Client
     {
         /// <summary>Gets the index id. Returns null if id not have yet (see <see cref="EnsureHaveIndexIdAsync" />).</summary>
         uint? IndexId { get; }
+        string IndexName { get; }
+        string BoxPath { get; }
 
         /// <summary>Delete from space by key.</summary>
         /// <param name="key">The key.</param>

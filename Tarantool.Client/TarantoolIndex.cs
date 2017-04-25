@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Tarantool.Client.Models;
 using Tarantool.Client.Models.ClientMessages;
+using Tarantool.Client.Serialization;
 
 namespace Tarantool.Client
 {
@@ -42,6 +44,16 @@ namespace Tarantool.Client
 
         /// <summary>Gets the index id. Return null if id not have yet (see <see cref="EnsureHaveIndexIdAsync" />).</summary>
         public uint? IndexId { get; private set; }
+        public string IndexName
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(_indexName)) throw new Exception($"{nameof(_indexName)} must not be null here");
+                return _indexName;
+            }
+        }
+        public string BoxPath => $"box.space.{Space.SpaceName}.index.{IndexName}";
+
 
         private ITarantoolSpace<T> Space { get; }
 
@@ -60,6 +72,43 @@ namespace Tarantool.Client
                                  cancellationToken)
                              .ConfigureAwait(false);
             return result;
+        }
+
+        /// <summary>Delete entities by keys.</summary>
+        /// <param name="keys">The keys list.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="Task" /> with inserted data as result.</returns>
+        public async Task<List<T>> DeleteMultipleAsync(IEnumerable<TKey> keys, CancellationToken cancellationToken, bool inTransaction = true)
+        {
+            await this.Space.EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);
+            await EnsureHaveIndexIdAsync(cancellationToken).ConfigureAwait(false);
+
+            string expression = $@"
+local keys=...
+local deleteds={{}}
+for i=1,{keys.Count()} do
+        var toDelete = box.space[{this.Space.SpaceId}].index[{this.IndexId}]:get(keys[i])
+        if (toDelete) then
+            table.insert(deleteds, toDelete)
+            box.space[{this.Space.SpaceId}].index[{this.IndexId}]:delete(keys[i])
+        end
+end
+return deleteds
+";
+            if (inTransaction)
+            {
+                expression = $@"
+box.begin()
+{expression}
+box.commit()
+";
+            }
+
+            var deleteds = await TarantoolClient.EvalAsync(new EvalRequest { Expression = expression, Args = new[] { keys } },
+                                 cancellationToken)
+                             .ConfigureAwait(false);
+
+            return deleteds.AsList().Select(i => MessagePackObjectMapper.Map<List<T>>(i)).First();
         }
 
         /// <summary>Ensures have index id. If not then retrieves it by name. </summary>

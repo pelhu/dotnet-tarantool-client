@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,6 +29,15 @@ namespace Tarantool.Client
 
         /// <summary>Gets the space id. Returns 0 if id not have yet (see <see cref="EnsureHaveSpaceIdAsync" />).</summary>
         public uint SpaceId { get; private set; }
+        public string SpaceName
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(_spaceName)) throw new Exception($"{nameof(_spaceName)} must not be null here");
+                return _spaceName;
+            }
+        }
+        public string BoxPath => $"box.space.{SpaceName}";
 
         private ITarantoolClient TarantoolClient { get; }
 
@@ -74,6 +85,34 @@ namespace Tarantool.Client
             return result;
         }
 
+        /// <summary>Insert entities into space.</summary>
+        /// <param name="entities">The entities list for insert.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="Task" /> with inserted data as result.</returns>
+        public async Task InsertMultipleAsync(IEnumerable<T> entities, CancellationToken cancellationToken, bool inTransaction = true)
+        {
+            await EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);
+
+            string expression = $@"
+local items=...
+for i=1,{entities.Count()} do
+      box.space[{this.SpaceId}]:insert(items[i])
+end
+";
+            if (inTransaction)
+            {
+                expression = $@"
+box.begin()
+{expression}
+box.commit()
+";
+            }
+
+            await TarantoolClient.EvalAsync(new EvalRequest { Expression = expression, Args = new[]{ entities } },
+                                 cancellationToken)
+                             .ConfigureAwait(false);
+        }
+
         /// <summary>Replaces entity in space.</summary>
         /// <param name="entity">The entity for replace.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
@@ -86,6 +125,34 @@ namespace Tarantool.Client
                                  cancellationToken)
                              .ConfigureAwait(false);
             return result;
+        }
+
+        /// <summary>Replaces entities in space.</summary>
+        /// <param name="entities">The entities list for replace.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="Task" /> with inserted data as result.</returns>
+        public async Task RepalceMultipleAsync(IEnumerable<T> entities, CancellationToken cancellationToken, bool inTransaction = true)
+        {
+            await EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);
+
+            string expression = $@"
+local items=...
+for i=1,{entities.Count()} do
+      box.space[{this.SpaceId}]:replace(items[i])
+end
+";
+            if (inTransaction)
+            {
+                expression = $@"
+box.begin()
+{expression}
+box.commit()
+";
+            }
+
+            await TarantoolClient.EvalAsync(new EvalRequest { Expression = expression, Args = new[] { entities } },
+                                 cancellationToken)
+                             .ConfigureAwait(false);
         }
 
         /// <summary>Searches entity by primary key and updates it if found or inserts it if not found.</summary>
@@ -101,11 +168,11 @@ namespace Tarantool.Client
             await EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);
             await TarantoolClient.UpsertAsync(
                     new UpsertRequest<T>
-                        {
-                            SpaceId = SpaceId,
-                            Tuple = entity,
-                            UpdateOperations = updateDefinition.UpdateOperations
-                        },
+                    {
+                        SpaceId = SpaceId,
+                        Tuple = entity,
+                        UpdateOperations = updateDefinition.UpdateOperations
+                    },
                     cancellationToken)
                 .ConfigureAwait(false);
         }

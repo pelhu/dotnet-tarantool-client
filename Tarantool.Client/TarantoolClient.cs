@@ -9,6 +9,7 @@ using MsgPack;
 using Tarantool.Client.Models;
 using Tarantool.Client.Models.ClientMessages;
 using Tarantool.Client.Serialization;
+using System;
 
 [assembly: InternalsVisibleTo("Tarantool.Client.Tests")]
 
@@ -94,6 +95,11 @@ namespace Tarantool.Client
         {
             var result = (await RequestAsync(deleteRequest, cancellationToken).ConfigureAwait(false)).AsList();
             return MapCollection<T>(result).ToList();
+        }
+
+        public void Dispose()
+        {
+            _connectionPool?.Dispose();
         }
 
         /// <summary>Performs an EVAL request.</summary>
