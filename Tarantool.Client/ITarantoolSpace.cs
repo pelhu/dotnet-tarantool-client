@@ -40,11 +40,25 @@ namespace Tarantool.Client
         /// <returns>The <see cref="Task" /> with inserted data as result.</returns>
         Task<IList<T>> InsertAsync(T entity, CancellationToken cancellationToken = default(CancellationToken));
 
+        /// <summary>Inserts entities into space.</summary>
+        /// <param name="entities">The entities for insert.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="Task" /></returns>
+        Task InsertMultipleAsync(IEnumerable<T> entities, CancellationToken cancellationToken, bool inTransaction = true);
+
+
         /// <summary>Replaces entity in space.</summary>
         /// <param name="entity">The entity for replace.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="Task" /> with replaced data as result.</returns>
         Task<IList<T>> ReplaceAsync(T entity, CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <summary>Replaces entities in space.</summary>
+        /// <param name="entities">The entities list for replace.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="Task" /></returns>
+        Task ReplaceMultipleAsync(IEnumerable<T> entities, CancellationToken cancellationToken, bool inTransaction = true);
+
 
         /// <summary>Searches entity by primary key and updates it if found or inserts it if not found.</summary>
         /// <param name="entity">The entity for replace.</param>

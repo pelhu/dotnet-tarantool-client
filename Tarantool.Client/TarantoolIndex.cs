@@ -44,15 +44,26 @@ namespace Tarantool.Client
 
         /// <summary>Gets the index id. Return null if id not have yet (see <see cref="EnsureHaveIndexIdAsync" />).</summary>
         public uint? IndexId { get; private set; }
-        public string IndexName
+
+        public string IndexName => _indexName;
+        public string BoxPath
         {
             get
             {
-                if (string.IsNullOrWhiteSpace(_indexName)) throw new Exception($"{nameof(_indexName)} must not be null here");
-                return _indexName;
+                if (!string.IsNullOrWhiteSpace(IndexName))
+                {
+                    return this.Space.BoxPath + $".index.{IndexName}";
+                }
+                else if (IndexId!=null && IndexId != 0)
+                {
+                    return this.Space.BoxPath + $".index[{IndexId}]";
+                }
+                else
+                {
+                    throw new InvalidOperationException("Either name or id of this index must be present to get BoxPath");
+                }
             }
         }
-        public string BoxPath => $"box.space.{Space.SpaceName}.index.{IndexName}";
 
 
         private ITarantoolSpace<T> Space { get; }
@@ -62,7 +73,7 @@ namespace Tarantool.Client
         /// <summary>Delete from space by key.</summary>
         /// <param name="key">The key.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>The <see cref="Task" />.</returns>
+        /// <returns>The <see cref="Task" /> with list of deleted rows.</returns>
         public async Task<IList<T>> DeleteAsync(TKey key, CancellationToken cancellationToken)
         {
             await EnsureHaveIndexIdAsync(cancellationToken).ConfigureAwait(false);
@@ -77,7 +88,7 @@ namespace Tarantool.Client
         /// <summary>Delete entities by keys.</summary>
         /// <param name="keys">The keys list.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>The <see cref="Task" /> with inserted data as result.</returns>
+        /// <returns>The <see cref="Task" /> with list of deleted rows.</returns>
         public async Task<List<T>> DeleteMultipleAsync(IEnumerable<TKey> keys, CancellationToken cancellationToken, bool inTransaction = true)
         {
             await this.Space.EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);

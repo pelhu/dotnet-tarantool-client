@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard1.4</TargetFramework>
@@ -10,9 +10,9 @@
     <PackageLicenseUrl>https://raw.githubusercontent.com/asukhodko/dotnet-tarantool-client/master/LICENSE.md</PackageLicenseUrl>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>TarantoolClient</PackageId>
-    <AssemblyVersion>2.0.15.0</AssemblyVersion>
-    <FileVersion>2.0.15.0</FileVersion>
-    <Version>2.0.15</Version>
+    <AssemblyVersion>2.0.20.0</AssemblyVersion>
+    <FileVersion>2.0.20.0</FileVersion>
+    <Version>2.0.20</Version>
   </PropertyGroup>
 
   <ItemGroup>

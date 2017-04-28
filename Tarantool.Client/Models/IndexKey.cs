@@ -27,5 +27,25 @@ namespace Tarantool.Client.Models
         {
             return new IndexKey<T1, T2, T3, T4>(keyValue1, keyValue2, keyValue3, keyValue4);
         }
+
+        public static IndexKey<T1, T2, T3, T4, T5> Create<T1, T2, T3, T4, T5>(T1 keyValue1, T2 keyValue2, T3 keyValue3, T4 keyValue4, T5 keyValue5)
+        {
+            return new IndexKey<T1, T2, T3, T4, T5>(keyValue1, keyValue2, keyValue3, keyValue4, keyValue5);
+        }
+
+        public static IndexKey<T1, T2, T3, T4, T5, T6> Create<T1, T2, T3, T4, T5, T6>(T1 keyValue1, T2 keyValue2, T3 keyValue3, T4 keyValue4, T5 keyValue5, T6 keyValue6)
+        {
+            return new IndexKey<T1, T2, T3, T4, T5, T6>(keyValue1, keyValue2, keyValue3, keyValue4, keyValue5, keyValue6);
+        }
+
+        public static IndexKey<T1, T2, T3, T4, T5, T6, T7> Create<T1, T2, T3, T4, T5, T6, T7>(T1 keyValue1, T2 keyValue2, T3 keyValue3, T4 keyValue4, T5 keyValue5, T6 keyValue6, T7 keyValue7)
+        {
+            return new IndexKey<T1, T2, T3, T4, T5, T6, T7>(keyValue1, keyValue2, keyValue3, keyValue4, keyValue5, keyValue6, keyValue7);
+        }
+
+        public static IndexKey<T1, T2, T3, T4, T5, T6, T7, T8> Create<T1, T2, T3, T4, T5, T6, T7, T8>(T1 keyValue1, T2 keyValue2, T3 keyValue3, T4 keyValue4, T5 keyValue5, T6 keyValue6, T7 keyValue7, T8 keyValue8)
+        {
+            return new IndexKey<T1, T2, T3, T4, T5, T6, T7, T8>(keyValue1, keyValue2, keyValue3, keyValue4, keyValue5, keyValue6, keyValue7, keyValue8);
+        }
     }
 }

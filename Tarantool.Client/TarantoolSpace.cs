@@ -29,15 +29,25 @@ namespace Tarantool.Client
 
         /// <summary>Gets the space id. Returns 0 if id not have yet (see <see cref="EnsureHaveSpaceIdAsync" />).</summary>
         public uint SpaceId { get; private set; }
-        public string SpaceName
+        public string SpaceName => _spaceName;
+        public string BoxPath
         {
             get
             {
-                if (string.IsNullOrWhiteSpace(_spaceName)) throw new Exception($"{nameof(_spaceName)} must not be null here");
-                return _spaceName;
+                if (!string.IsNullOrWhiteSpace(SpaceName))
+                {
+                    return $"box.space.{SpaceName}";
+                }
+                else if (SpaceId != 0)
+                {
+                    return $"box.space[{SpaceId}]";
+                }
+                else
+                {
+                    throw new InvalidOperationException("Either name or id of this space must be present to get BoxPath");
+                }
             }
         }
-        public string BoxPath => $"box.space.{SpaceName}";
 
         private ITarantoolClient TarantoolClient { get; }
 
@@ -108,7 +118,7 @@ box.commit()
 ";
             }
 
-            await TarantoolClient.EvalAsync(new EvalRequest { Expression = expression, Args = new[]{ entities } },
+            await TarantoolClient.EvalAsync(new EvalRequest { Expression = expression, Args = new[] { entities } },
                                  cancellationToken)
                              .ConfigureAwait(false);
         }
@@ -130,8 +140,8 @@ box.commit()
         /// <summary>Replaces entities in space.</summary>
         /// <param name="entities">The entities list for replace.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>The <see cref="Task" /> with inserted data as result.</returns>
-        public async Task RepalceMultipleAsync(IEnumerable<T> entities, CancellationToken cancellationToken, bool inTransaction = true)
+        /// <returns>The <see cref="Task" /></returns>
+        public async Task ReplaceMultipleAsync(IEnumerable<T> entities, CancellationToken cancellationToken, bool inTransaction = true)
         {
             await EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);
 
