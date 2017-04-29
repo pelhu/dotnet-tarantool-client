@@ -35,6 +35,7 @@ namespace Tarantool.Client.Serialization
             if (targetType == typeof(IEnumerable<MessagePackObject>)) return source.AsEnumerable();
             if (targetType == typeof(DateTime)) return MapDateTime(property, source);
             if (targetType == typeof(DateTimeOffset)) return MapDateTimeOffset(property, source);
+            if (targetType == typeof(TimeSpan)) return new TimeSpan(source.AsInt64());
 
             if (targetType == typeof(MessagePackObject)) return source;
 
@@ -60,6 +61,20 @@ namespace Tarantool.Client.Serialization
             if (ti.IsClass && source.IsMap) return MapDictionaryToObject(targetType, source.AsDictionary());
 
             if (ti.IsEnum) return MapEnum(targetType, source);
+
+            //var serializer = SerializationContext.Default.GetSerializer(targetType);
+            //if (serializer != null)
+            //{
+            //    try
+            //    {
+            //        return serializer.UnpackSingleObject(source.AsBinary());
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        throw new MessagePackMapperException(
+            //            $"Serializer error for type {targetType.FullName}.", ex);
+            //    }
+            //}
 
             throw new MessagePackMapperException(
                 $"Cannot find MsgPackObject converter for type {targetType.FullName}.");
