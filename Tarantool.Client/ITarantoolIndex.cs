@@ -58,8 +58,23 @@ namespace Tarantool.Client
             TKey key,
             Iterator iterator = Iterator.Eq,
             uint offset = 0,
-            uint limit = int.MaxValue,
+            uint limit = uint.MaxValue,
             CancellationToken cancellationToken = default(CancellationToken));
+
+
+        /// <summary>Select from space by sub part of key</summary>
+        /// <param name="key">The key value.</param>
+        /// <param name="iterator">The iterator.</param>
+        /// <param name="offset">The offset.</param>
+        /// <param name="limit">The limit.</param>
+        /// <param name="cancellationToken">The cancellation Token.</param>
+        /// <returns>The <see cref="Task" />.</returns>
+        Task<IList<T>> SelectBypartialKeyAsync<TPartKey>(
+            TPartKey partKey,
+            Iterator iterator = Iterator.Eq,
+            uint offset=0,
+            uint limit = uint.MaxValue,
+            CancellationToken cancellationToken = default(CancellationToken)) where TPartKey : IndexKey;
 
         /// <summary>Performs an updates in space.</summary>
         /// <param name="key">The key.</param>

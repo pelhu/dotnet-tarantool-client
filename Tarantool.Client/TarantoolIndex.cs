@@ -54,7 +54,7 @@ namespace Tarantool.Client
                 {
                     return this.Space.BoxPath + $".index.{IndexName}";
                 }
-                else if (IndexId!=null && IndexId != 0)
+                else if (IndexId != null && IndexId != 0)
                 {
                     return this.Space.BoxPath + $".index[{IndexId}]";
                 }
@@ -183,6 +183,48 @@ box.commit()
                                      SpaceId = Space.SpaceId,
                                      IndexId = IndexId.Value,
                                      Key = key.Key,
+                                     Iterator = iterator,
+                                     Offset = offset,
+                                     Limit = limit
+                                 },
+                                 cancellationToken)
+                             .ConfigureAwait(false);
+            return result;
+        }
+
+
+        /// <summary>Select from space by sub part of key</summary>
+        /// <param name="partKey">The key filed (array or list).</param>
+        /// <param name="iterator">The iterator.</param>
+        /// <param name="offset">The offset.</param>
+        /// <param name="limit">The limit.</param>
+        /// <param name="cancellationToken">The cancellation Token.</param>
+        /// <returns>The <see cref="Task" />.</returns>
+        public async Task<IList<T>> SelectBypartialKeyAsync<TPartKey>(
+            TPartKey partKey,
+            Iterator iterator,
+            uint offset,
+            uint limit,
+            CancellationToken cancellationToken) where TPartKey : IndexKey
+        {
+            #region validation partial key type
+            var partKeyTypes = typeof(TPartKey).GenericTypeArguments;
+            var keyTypes = typeof(TKey).GenericTypeArguments;
+            if (partKeyTypes.Length >= keyTypes.Length
+                || Enumerable.Range(0, partKeyTypes.Length - 1).Any(i => partKeyTypes[i] != keyTypes[i]))
+            {
+                throw new TarantoolException($"Type of {nameof(partKey)} {typeof(TPartKey)} must be a subkey of {typeof(TKey)}.");
+            }
+            #endregion
+
+            await EnsureHaveIndexIdAsync(cancellationToken).ConfigureAwait(false);
+            Debug.Assert(IndexId != null, "IndexId != null");
+            var result = await TarantoolClient.SelectAsync<T>(
+                                 new SelectRequest
+                                 {
+                                     SpaceId = Space.SpaceId,
+                                     IndexId = IndexId.Value,
+                                     Key = partKey.Key,
                                      Iterator = iterator,
                                      Offset = offset,
                                      Limit = limit
