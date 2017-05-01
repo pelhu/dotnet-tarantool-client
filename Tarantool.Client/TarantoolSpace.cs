@@ -99,7 +99,7 @@ namespace Tarantool.Client
         /// <param name="entities">The entities list for insert.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="Task" /> with inserted data as result.</returns>
-        public async Task InsertMultipleAsync(IEnumerable<T> entities, CancellationToken cancellationToken, bool inTransaction = true)
+        public async Task InsertMultipleAsync(List<T> entities, CancellationToken cancellationToken, bool inTransaction = true)
         {
             await EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);
 
@@ -141,7 +141,7 @@ box.commit()
         /// <param name="entities">The entities list for replace.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="Task" /></returns>
-        public async Task ReplaceMultipleAsync(IEnumerable<T> entities, CancellationToken cancellationToken, bool inTransaction = true)
+        public async Task ReplaceMultipleAsync(List<T> entities, CancellationToken cancellationToken, bool inTransaction = true)
         {
             await EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);
 

@@ -9,7 +9,7 @@ namespace Tarantool.Client
     /// <summary>The interface to Tarantool space indexes.</summary>
     /// <typeparam name="T">The class for object mapping.</typeparam>
     /// <typeparam name="TKey">The <see cref="IndexKey" /> type.</typeparam>
-    public interface ITarantoolIndex<T, in TKey>
+    public interface ITarantoolIndex<T, TKey>
         where TKey : IndexKey
     {
         /// <summary>Gets the index id. Returns null if id not have yet (see <see cref="EnsureHaveIndexIdAsync" />).</summary>
@@ -27,7 +27,7 @@ namespace Tarantool.Client
         /// <param name="keys">The keys list.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="Task" /> with list of deleted rows.</returns>
-        Task<List<T>> DeleteMultipleAsync(IEnumerable<TKey> keys, CancellationToken cancellationToken, bool inTransaction = true);
+        Task<List<T>> DeleteMultipleAsync(List<TKey> keys, CancellationToken cancellationToken, bool inTransaction = true);
 
 
         /// <summary>Ensures have index id. If not then retrieves it by name. </summary>

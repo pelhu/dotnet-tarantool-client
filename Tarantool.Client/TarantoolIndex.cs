@@ -89,7 +89,7 @@ namespace Tarantool.Client
         /// <param name="keys">The keys list.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="Task" /> with list of deleted rows.</returns>
-        public async Task<List<T>> DeleteMultipleAsync(IEnumerable<TKey> keys, CancellationToken cancellationToken, bool inTransaction = true)
+        public async Task<List<T>> DeleteMultipleAsync(List<TKey> keys, CancellationToken cancellationToken, bool inTransaction = true)
         {
             await this.Space.EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);
             await EnsureHaveIndexIdAsync(cancellationToken).ConfigureAwait(false);
