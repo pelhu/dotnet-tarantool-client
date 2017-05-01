@@ -71,7 +71,7 @@ namespace Tarantool.Client
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
             CheckDisposed();
-            if (WhenDisconnected != null) throw new InvalidOperationException("Connection should be used only once.");
+            if (WhenDisconnected != null) throw new InvalidOperationException("Connection should be used(connected) only once.");
 
             // ReSharper disable once ExceptionNotDocumented
             var node = _connectionOptions.Nodes[_nodeNumber];

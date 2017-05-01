@@ -13,7 +13,7 @@ namespace Tarantool.Client
     /// <summary>
     ///     The TarantoolClient interface.
     /// </summary>
-    public interface ITarantoolClient : IDisposable
+    public interface ITarantoolClient
     {
         /// <summary>Performs a CALL request.</summary>
         /// <param name="callRequest">The call request.</param>

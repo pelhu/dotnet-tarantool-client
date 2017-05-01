@@ -95,23 +95,33 @@ namespace Tarantool.Client
             await EnsureHaveIndexIdAsync(cancellationToken).ConfigureAwait(false);
 
             string expression = $@"
-local keys=...
 local deleteds={{}}
 for i=1,{keys.Count()} do
-        var toDelete = box.space[{this.Space.SpaceId}].index[{this.IndexId}]:get(keys[i])
+        local toDelete = box.space[{this.Space.SpaceId}].index[{this.IndexId}]:get(keys[i])
         if (toDelete) then
             table.insert(deleteds, toDelete)
             box.space[{this.Space.SpaceId}].index[{this.IndexId}]:delete(keys[i])
         end
 end
-return deleteds
 ";
             if (inTransaction)
             {
                 expression = $@"
+local delete = function(keys)
 box.begin()
 {expression}
 box.commit()
+return deleteds
+end
+delete({{...}})
+";
+            }
+            else
+            {
+                expression = $@"
+local keys={{...}}
+{expression}
+return deleteds
 ";
             }
 

@@ -97,11 +97,6 @@ namespace Tarantool.Client
             return MapCollection<T>(result).ToList();
         }
 
-        public void Dispose()
-        {
-            _connectionPool?.Dispose();
-        }
-
         /// <summary>Performs an EVAL request.</summary>
         /// <param name="evalRequest">The call request.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
