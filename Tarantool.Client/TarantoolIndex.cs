@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MsgPack;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -88,8 +89,36 @@ namespace Tarantool.Client
         /// <summary>Delete entities by keys.</summary>
         /// <param name="keys">The keys list.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>The <see cref="Task" /> with list of deleted rows.</returns>
-        public async Task<List<T>> DeleteMultipleAsync(List<TKey> keys, CancellationToken cancellationToken, bool inTransaction = true)
+        public async Task DeleteMultipleAsync(IEnumerable<TKey> keys, CancellationToken cancellationToken = default(CancellationToken), bool inTransaction = true)
+        {
+            await this.Space.EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);
+            await EnsureHaveIndexIdAsync(cancellationToken).ConfigureAwait(false);
+
+            string expression = $@"
+local keys=...
+for i=1,{keys.Count()} do
+    {this.BoxPath}:delete(keys[i])
+end
+";
+            if (inTransaction)
+            {
+                expression = $@"
+box.begin()
+{expression}
+box.commit()
+";
+            }
+
+            await TarantoolClient.EvalAsync(new EvalRequest { Expression = expression, Args = new[] { keys.Select(k => k.Key) } },
+                                 cancellationToken)
+                             .ConfigureAwait(false);
+        }
+
+        /// <summary>Delete entities by keys.</summary>
+        /// <param name="keys">The keys list.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="Task" /> with list of deleted rows (except for vinyl engine).</returns>
+        public async Task<List<T>> DeleteMultipleAndReturnAsync(IEnumerable<TKey> keys, CancellationToken cancellationToken = default(CancellationToken), bool inTransaction = true)
         {
             await this.Space.EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);
             await EnsureHaveIndexIdAsync(cancellationToken).ConfigureAwait(false);
@@ -97,11 +126,10 @@ namespace Tarantool.Client
             string expression = $@"
 local deleteds={{}}
 for i=1,{keys.Count()} do
-        local toDelete = box.space[{this.Space.SpaceId}].index[{this.IndexId}]:get(keys[i])
-        if (toDelete) then
-            table.insert(deleteds, toDelete)
-            box.space[{this.Space.SpaceId}].index[{this.IndexId}]:delete(keys[i])
-        end
+    local t = {this.BoxPath}:delete(keys[i])
+    if(t~=nil)then
+        table.insert(deleteds, t)
+    end
 end
 ";
             if (inTransaction)
@@ -113,24 +141,65 @@ box.begin()
 box.commit()
 return deleteds
 end
-delete({{...}})
+local keys=...
+return delete(keys)
 ";
             }
             else
             {
                 expression = $@"
-local keys={{...}}
+local keys=...
 {expression}
 return deleteds
 ";
             }
 
-            var deleteds = await TarantoolClient.EvalAsync(new EvalRequest { Expression = expression, Args = new[] { keys } },
+            var deleteds = await TarantoolClient.EvalAsync(new EvalRequest { Expression = expression, Args = new[] { keys.Select(k => k.Key) } },
                                  cancellationToken)
                              .ConfigureAwait(false);
 
-            return deleteds.AsList().Select(i => MessagePackObjectMapper.Map<List<T>>(i)).First();
+            return deleteds.AsList().Select(i => MessagePackObjectMapper.Map<List<T>>(i)).FirstOrDefault();
         }
+
+//        private async Task<MessagePackObject> deleteMultipleAsync_inner(IEnumerable<TKey> keys, CancellationToken cancellationToken, bool inTransaction, bool withReturn)
+//        {
+//            await this.Space.EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);
+//            await EnsureHaveIndexIdAsync(cancellationToken).ConfigureAwait(false);
+
+//            string expression = $@"
+//local deleteds={{}}
+//for i=1,{keys.Count()} do
+//    local t = {this.BoxPath}:delete(keys[i])
+//    if(t~=nil)then
+//        table.insert(deleteds, t)
+//    end
+//end
+//";
+//            if (inTransaction)
+//            {
+//                expression = $@"
+//local delete = function(keys)
+//box.begin()
+//{expression}
+//box.commit()
+//return deleteds
+//end
+//return delete({{...}})
+//";
+//            }
+//            else
+//            {
+//                expression = $@"
+//local keys={{...}}
+//{expression}
+//return deleteds
+//";
+//            }
+
+//            return await TarantoolClient.EvalAsync(new EvalRequest { Expression = expression, Args = keys.Select(k => k.Key) },
+//                                 cancellationToken)
+//                             .ConfigureAwait(false);
+//        }
 
         /// <summary>Ensures have index id. If not then retrieves it by name. </summary>
         /// <param name="cancellationToken">The cancellation token.</param>

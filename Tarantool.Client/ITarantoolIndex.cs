@@ -27,7 +27,14 @@ namespace Tarantool.Client
         /// <param name="keys">The keys list.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="Task" /> with list of deleted rows.</returns>
-        Task<List<T>> DeleteMultipleAsync(List<TKey> keys, CancellationToken cancellationToken, bool inTransaction = true);
+        Task<List<T>> DeleteMultipleAndReturnAsync(IEnumerable<TKey> keys, CancellationToken cancellationToken = default(CancellationToken), bool inTransaction = true);
+
+
+        /// <summary>Delete entities by keys.</summary>
+        /// <param name="keys">The keys list.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="Task" /> with list of deleted rows.</returns>
+        Task DeleteMultipleAsync(IEnumerable<TKey> keys, CancellationToken cancellationToken = default(CancellationToken), bool inTransaction = true);
 
 
         /// <summary>Ensures have index id. If not then retrieves it by name. </summary>
