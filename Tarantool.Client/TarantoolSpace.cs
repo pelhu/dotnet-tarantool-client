@@ -101,6 +101,8 @@ namespace Tarantool.Client
         /// <returns>The <see cref="Task" /> with inserted data as result.</returns>
         public async Task InsertMultipleAsync(List<T> entities, CancellationToken cancellationToken = default(CancellationToken), bool inTransaction = true)
         {
+            if (entities == null || !entities.Any()) return;
+
             await EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);
 
             string expression = $@"
@@ -143,6 +145,8 @@ box.commit()
         /// <returns>The <see cref="Task" /></returns>
         public async Task ReplaceMultipleAsync(List<T> entities, CancellationToken cancellationToken = default(CancellationToken), bool inTransaction = true)
         {
+            if (entities == null || !entities.Any()) return;
+
             await EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);
 
             string expression = $@"

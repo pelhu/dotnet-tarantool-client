@@ -91,6 +91,8 @@ namespace Tarantool.Client
         /// <param name="cancellationToken">The cancellation token.</param>
         public async Task DeleteMultipleAsync(IEnumerable<TKey> keys, CancellationToken cancellationToken = default(CancellationToken), bool inTransaction = true)
         {
+            if (keys == null || !keys.Any()) return;
+
             await this.Space.EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);
             await EnsureHaveIndexIdAsync(cancellationToken).ConfigureAwait(false);
 
@@ -120,6 +122,8 @@ box.commit()
         /// <returns>The <see cref="Task" /> with list of deleted rows (except for vinyl engine).</returns>
         public async Task<List<T>> DeleteMultipleAndReturnAsync(IEnumerable<TKey> keys, CancellationToken cancellationToken = default(CancellationToken), bool inTransaction = true)
         {
+            if (keys == null || !keys.Any()) return new List<T>();
+
             await this.Space.EnsureHaveSpaceIdAsync(cancellationToken).ConfigureAwait(false);
             await EnsureHaveIndexIdAsync(cancellationToken).ConfigureAwait(false);
 
