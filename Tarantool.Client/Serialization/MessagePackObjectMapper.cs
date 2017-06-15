@@ -17,25 +17,28 @@ namespace Tarantool.Client.Serialization
 
         public static object Map(Type targetType, MessagePackObject source, PropertyInfo property = null)
         {
+            if (source.IsNil) return null;
             if (targetType == typeof(string)) return source.AsString();
-            if (targetType == typeof(int)) return source.AsInt32();
-            if (targetType == typeof(uint)) return source.AsUInt32();
-            if (targetType == typeof(long)) return source.AsInt64();
-            if (targetType == typeof(ulong)) return source.AsUInt64();
-            if (targetType == typeof(float)) return source.AsSingle();
-            if (targetType == typeof(double)) return source.AsDouble();
-            if (targetType == typeof(bool)) return source.AsBoolean();
+            if (targetType == typeof(int) || targetType == typeof(int?)) return source.AsInt32();
+            if (targetType == typeof(uint) || targetType == typeof(uint?)) return source.AsUInt32();
+            if (targetType == typeof(long) || targetType == typeof(long?)) return source.AsInt64();
+            if (targetType == typeof(ulong) || targetType == typeof(ulong?)) return source.AsUInt64();
+            if (targetType == typeof(float) || targetType == typeof(float?)) return source.AsSingle();
+            if (targetType == typeof(double) || targetType == typeof(double?)) return source.AsDouble();
+            if (targetType == typeof(bool) || targetType == typeof(bool?)) return source.AsBoolean();
             if (targetType == typeof(byte[])) return source.AsBinary();
-            if (targetType == typeof(byte)) return source.AsByte();
-            if (targetType == typeof(sbyte)) return source.AsSByte();
+            if (targetType == typeof(byte) || targetType == typeof(byte?)) return source.AsByte();
+            if (targetType == typeof(sbyte) || targetType == typeof(sbyte?)) return source.AsSByte();
             if (targetType == typeof(char[])) return source.AsCharArray();
-            if (targetType == typeof(short)) return source.AsInt16();
-            if (targetType == typeof(ushort)) return source.AsUInt16();
+            if (targetType == typeof(short) || targetType == typeof(short?)) return source.AsInt16();
+            if (targetType == typeof(ushort) || targetType == typeof(ushort?)) return source.AsUInt16();
+            if (targetType == typeof(DateTime) || targetType == typeof(DateTime?)) return MapDateTime(property, source);
+            if (targetType == typeof(DateTimeOffset) || targetType == typeof(DateTimeOffset?)) return MapDateTimeOffset(property, source);
+            if (targetType == typeof(TimeSpan) || targetType == typeof(TimeSpan?)) return new TimeSpan(source.AsInt64());
             if (targetType == typeof(IList<MessagePackObject>)) return source.AsList();
             if (targetType == typeof(IEnumerable<MessagePackObject>)) return source.AsEnumerable();
-            if (targetType == typeof(DateTime)) return MapDateTime(property, source);
-            if (targetType == typeof(DateTimeOffset)) return MapDateTimeOffset(property, source);
-            if (targetType == typeof(TimeSpan)) return new TimeSpan(source.AsInt64());
+
+            var ti = targetType.GetTypeInfo();
 
             if (targetType == typeof(MessagePackObject)) return source;
 
@@ -48,13 +51,11 @@ namespace Tarantool.Client.Serialization
                     return Map(nullableUnderlyingType, source, property);
             }
 
-            var ti = targetType.GetTypeInfo();
-
             if (ti.IsGenericType && (targetType.GetGenericTypeDefinition() == typeof(List<>)
                                      || targetType.GetGenericTypeDefinition() == typeof(IList<>)))
                 return MapList(targetType, source.AsList());
 
-            if (ti.IsClass && (source.IsList || source.IsNil)) return MapClass(targetType, source);
+            if (ti.IsClass && source.IsList) return MapClass(targetType, source);
 
             if (ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(Dictionary<,>) && source.IsMap) return MapDictionary(targetType, source.AsDictionary());
 
@@ -62,27 +63,12 @@ namespace Tarantool.Client.Serialization
 
             if (ti.IsEnum) return MapEnum(targetType, source);
 
-            //var serializer = SerializationContext.Default.GetSerializer(targetType);
-            //if (serializer != null)
-            //{
-            //    try
-            //    {
-            //        return serializer.UnpackSingleObject(source.AsBinary());
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        throw new MessagePackMapperException(
-            //            $"Serializer error for type {targetType.FullName}.", ex);
-            //    }
-            //}
-
             throw new MessagePackMapperException(
                 $"Cannot find MsgPackObject converter for type {targetType.FullName}.");
         }
 
         private static object MapClass(Type targetType, MessagePackObject source)
         {
-            if (source.IsNil) return null;
             var sourceFields = source.AsList();
             var target = Activator.CreateInstance(targetType);
             foreach (var property in targetType.GetRuntimeProperties())
@@ -154,9 +140,9 @@ namespace Tarantool.Client.Serialization
         private static object MapDictionary(Type targetType, MessagePackObjectDictionary source)
         {
             var target = Activator.CreateInstance(targetType);
-            Type keyType = targetType.GetGenericArguments()[0];
-            Type valueType = targetType.GetGenericArguments()[1];
-            MethodInfo addMI = targetType.GetMethod("Add", new[] { keyType, valueType });
+            Type keyType = targetType.GenericTypeArguments[0];
+            Type valueType = targetType.GenericTypeArguments[1];
+            MethodInfo addMI = targetType.GetRuntimeMethod("Add", new[] { keyType, valueType });
             foreach (var pair in source)
             {
                 var targetKey = Map(keyType, pair.Key);

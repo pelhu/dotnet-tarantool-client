@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using MsgPack.Serialization;
 
@@ -9,6 +8,7 @@ using Xunit;
 
 namespace Tarantool.Client
 {
+    [Collection("Tarantool database collection")]
     public class TarantoolSpace_InsertShould
     {
         public class MyTestEntity
@@ -32,12 +32,19 @@ namespace Tarantool.Client
             [MessagePackMember(5)]
             [MessagePackDateTimeMember(DateTimeConversionMethod = DateTimeMemberConversionMethod.UnixEpoc)]
             public DateTime SomeDateTimeFieldU { get; set; }
+
+            [MessagePackMember(6)]
+            [MessagePackDateTimeMember(DateTimeConversionMethod = DateTimeMemberConversionMethod.UnixEpoc)]
+            public DateTime? SomeNullableDateTimeField { get; set; }
+
+            [MessagePackMember(7)]
+            public DateTime? SomeNullableDateTimeField2 { get; set; }
         }
 
         [Fact]
         public async Task InsertEntity()
         {
-            var tarantoolClient = TarantoolClient.Create("mytestuser:mytestpass@tarantool-host:3301");
+            var tarantoolClient = TarantoolClient.Create("mytestuser:mytestpass@localhost:3301");
             var testSpace = tarantoolClient.GetSpace<MyTestEntity>("test");
             var testSpacePrimaryIndex = testSpace.GetIndex<IndexKey<uint>>(0);
             await testSpacePrimaryIndex.DeleteAsync(new IndexKey<uint>(598));
@@ -52,7 +59,9 @@ namespace Tarantool.Client
                     SomeIntField = 1900,
                     SomeDateTimeField = now,
                     SomeDateTimeFieldN = now,
-                    SomeDateTimeFieldU = now
+                    SomeDateTimeFieldU = now,
+                    SomeNullableDateTimeField = now,
+                    SomeNullableDateTimeField2 = null
                 });
 
                 Assert.Equal(1, result.Count);
@@ -62,6 +71,7 @@ namespace Tarantool.Client
                 Assert.Equal(now, result[0].SomeDateTimeField);
                 Assert.Equal(now, result[0].SomeDateTimeFieldN);
                 Assert.Equal((now - result[0].SomeDateTimeFieldU).TotalSeconds, 0, 2);
+                Assert.Equal((now - result[0].SomeNullableDateTimeField.Value).TotalSeconds, 0, 2);
             }
             finally
             {

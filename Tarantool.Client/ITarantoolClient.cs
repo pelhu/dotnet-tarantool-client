@@ -6,7 +6,6 @@ using MsgPack;
 
 using Tarantool.Client.Models;
 using Tarantool.Client.Models.ClientMessages;
-using System;
 
 namespace Tarantool.Client
 {

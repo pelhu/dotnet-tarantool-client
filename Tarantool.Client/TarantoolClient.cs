@@ -9,9 +9,9 @@ using MsgPack;
 using Tarantool.Client.Models;
 using Tarantool.Client.Models.ClientMessages;
 using Tarantool.Client.Serialization;
-using System;
 
 [assembly: InternalsVisibleTo("Tarantool.Client.Tests")]
+[assembly: InternalsVisibleTo("Tarantool.Client.FunctionalTests")]
 
 namespace Tarantool.Client
 {
